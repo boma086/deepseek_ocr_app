@@ -25,12 +25,25 @@ Modern OCR web application powered by DeepSeek-OCR with a stunning React fronten
    # Edit .env to configure ports, upload limits, etc.
    ```
 
-2. **Start the application:**
+2. **Start the application (local GPU inference):**
    ```bash
    docker compose up --build
    ```
 
    The first run will download the model (~5-10GB), which may take some time.
+
+### ☁️ Cloud OCR Mode (no local GPU required)
+
+1. Configure the remote provider in `.env`:
+   ```bash
+   cp .env.example .env
+   # Set OCR_PROVIDER=cloud and fill in REMOTE_OCR_API_KEY, REMOTE_OCR_API_URL, REMOTE_OCR_MODEL
+   ```
+2. Launch the cloud stack:
+   ```bash
+   docker compose -f docker-compose.cloud.yml up --build
+   ```
+   This will build the lightweight backend container (no CUDA) and proxy all OCR requests to the configured cloud API. Frontend access remains `http://localhost:3000` by default.
 
 3. **Access the application:**
    - **Frontend**: http://localhost:3000 (or your configured FRONTEND_PORT)
@@ -72,6 +85,15 @@ FRONTEND_PORT=3000
 MODEL_NAME=deepseek-ai/DeepSeek-OCR
 HF_HOME=/models
 
+# OCR Provider
+OCR_PROVIDER=local
+
+# Remote OCR Configuration (used when OCR_PROVIDER=cloud)
+REMOTE_OCR_API_URL=https://api.siliconflow.cn/v1/chat/completions
+REMOTE_OCR_API_KEY=
+REMOTE_OCR_MODEL=deepseek-ai/DeepSeek-OCR
+REMOTE_OCR_TIMEOUT=60
+
 # Upload Configuration
 MAX_UPLOAD_SIZE_MB=100  # Maximum file upload size
 
@@ -88,6 +110,11 @@ CROP_MODE=true         # Enable dynamic cropping for large images
 - `FRONTEND_PORT`: Frontend port (default: 3000)
 - `MODEL_NAME`: HuggingFace model identifier
 - `HF_HOME`: Model cache directory
+- `OCR_PROVIDER`: `local` (default) for on-device inference, set to `cloud` to forward requests to a remote API
+- `REMOTE_OCR_API_URL`: Cloud OCR endpoint (required when `OCR_PROVIDER=cloud`)
+- `REMOTE_OCR_API_KEY`: API key/token for the remote OCR provider
+- `REMOTE_OCR_MODEL`: Remote model identifier (defaults to `deepseek-ai/DeepSeek-OCR`)
+- `REMOTE_OCR_TIMEOUT`: Request timeout in seconds for the remote OCR call
 - `MAX_UPLOAD_SIZE_MB`: Maximum file upload size in megabytes
 - `BASE_SIZE`: Base image processing size (affects memory usage)
 - `IMAGE_SIZE`: Tile size for dynamic cropping

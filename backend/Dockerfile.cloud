@@ -1,0 +1,25 @@
+FROM python:3.10-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends build-essential git; \
+    rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+
+RUN set -eux; \
+    pip install --upgrade pip; \
+    grep -v '^torch' requirements.txt > requirements.cloud.txt; \
+    pip install --no-cache-dir -r requirements.cloud.txt; \
+    rm requirements.cloud.txt
+
+COPY . .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "main_cloud:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

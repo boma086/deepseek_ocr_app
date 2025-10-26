@@ -1,0 +1,32 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.cloud
+    container_name: deepseek-ocr-backend
+    env_file:
+      - .env
+    environment:
+      OCR_PROVIDER: cloud
+      REMOTE_OCR_API_URL: ${REMOTE_OCR_API_URL}
+      REMOTE_OCR_API_KEY: ${REMOTE_OCR_API_KEY}
+      REMOTE_OCR_MODEL: ${REMOTE_OCR_MODEL}
+      REMOTE_OCR_TIMEOUT: ${REMOTE_OCR_TIMEOUT:-60}
+    ports:
+      - "${API_PORT:-8000}:${API_PORT:-8000}"
+    networks:
+      - ocr-network
+
+  frontend:
+    build: ./frontend
+    container_name: deepseek-ocr-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+    networks:
+      - ocr-network
+
+networks:
+  ocr-network:
+    driver: bridge
